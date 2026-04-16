@@ -4,6 +4,7 @@ namespace MultiMonPresenter
     {
         MonitorHelper mh = new MonitorHelper();
         MultiMonSettings settings = new MultiMonSettings();
+        MultiMonitorSlideshow? slideshow = null;
         public Main()
         {
             InitializeComponent();
@@ -19,7 +20,7 @@ namespace MultiMonPresenter
         {
             if (selectFolderDialog.ShowDialog() == DialogResult.OK)
             {
-                baseFolder.Text = Path.GetFullPath(selectFolderDialog.FileName);
+                baseFolder.Text = Path.GetFullPath(selectFolderDialog.FileName).Replace("Select Folder", "");
             }
         }
 
@@ -29,12 +30,14 @@ namespace MultiMonPresenter
             menuMonitorsEnabled.DropDownItems.Clear();
             foreach (var m in monitors)
             {
-                menuMonitorsEnabled.DropDownItems.Add(new ToolStripMenuItem($"{m.Index}: {m.Resolution.Width}x{m.Resolution.Height}")
+                var mi = new ToolStripMenuItem($"{m.Index}: {m.Resolution.Width}x{m.Resolution.Height}")
                 {
                     Tag = $"{m.Index}",
                     CheckOnClick = true,
                     Checked = settings.SelectedMonitors.Contains(m.Index) || settings.SelectedMonitors.Count == 0
-                });
+                };
+                mi.Click += (s, e) => CheckFiles(s, e);
+                menuMonitorsEnabled.DropDownItems.Add(mi);
             }
             menuMonitorsEnabled.Enabled = monitors.Count > 0;
         }
@@ -55,8 +58,19 @@ namespace MultiMonPresenter
         {
             lFolderErrorMessage.Visible = false;
 
-            lFolderErrorMessage.Text = lFolderErrorMessage.Visible ? "Folder does not exist." : "";
-            lFolderErrorMessage.Visible = !Directory.Exists(baseFolder.Text);
+            if (string.IsNullOrWhiteSpace(baseFolder.Text))
+            {
+                statusLabel1.Text = "Select folder.";
+                return;
+            }
+
+            if (!Directory.Exists(baseFolder.Text))
+            {
+                lFolderErrorMessage.Text = "Folder does not exist.";
+                lFolderErrorMessage.Visible = true;
+                statusLabel1.Text = "Folder not found.";
+                return;
+            }
 
             foreach (var item in menuMonitorsEnabled.DropDownItems)
             {
@@ -76,7 +90,7 @@ namespace MultiMonPresenter
 
         private void menuFileLoad_Click(object sender, EventArgs e)
         {
-            if(loadSettingsDialog.ShowDialog() == DialogResult.OK)
+            if (loadSettingsDialog.ShowDialog() == DialogResult.OK)
             {
                 settings = MultiMonSettings.Load(loadSettingsDialog.FileName);
                 CheckFolder(sender, e);
@@ -102,19 +116,44 @@ namespace MultiMonPresenter
 
         private void CheckFiles(object sender, EventArgs e)
         {
-            if (Directory.Exists(baseFolder.Text))
+            if (String.IsNullOrEmpty(baseFolder.Text) || !Directory.Exists(baseFolder.Text))
             {
-                var fileCount = Directory.EnumerateFiles(baseFolder.Text, "*.jpg", SearchOption.AllDirectories).Count();
-                if (fileCount == 0)
+                statusLabel1.Text = String.IsNullOrEmpty(baseFolder.Text) ? "Select folder." : "Folder does not exist.";
+                statusLabel2.Text = "0 Files";
+                statusLabel3.Text = "0 Slides";
+                return;
+            }
+            else if (Directory.Exists(baseFolder.Text))
+            {
+                slideshow = new MultiMonitorSlideshow(baseFolder.Text, SelectedMonitors);
+                statusLabel2.Text = $"{slideshow.TotalFiles:#,##0} Files";
+                statusLabel3.Text = $"{slideshow.TotalSlides:#,##0} Slides";
+                if(slideshow.TotalSlides == 0)
                 {
-                    lFolderErrorMessage.Text = "No .jpg files found in the folder.";
-                    lFolderErrorMessage.Visible = true;
-                    statusLabel2.Text = $"0 Files";
+                    statusLabel1.Text = "No image files found in selected monitor folders.";
+                    bDoSlideshow.Enabled = false;
                 }
                 else
                 {
-                    statusLabel2.Text = $"{fileCount:0,000} Files";
+                    statusLabel1.Text = "Ready.";
+                    bDoSlideshow.Enabled = true;
                 }
+            }
+        }
+
+        private List<int> SelectedMonitors
+        {
+            get
+            {
+                var selected = new List<int>();
+                foreach (var item in menuMonitorsEnabled.DropDownItems)
+                {
+                    if (item is ToolStripMenuItem menuItem && menuItem.Enabled && menuItem.Checked)
+                    {
+                        selected.Add(int.Parse((string)menuItem.Tag));
+                    }
+                }
+                return selected;
             }
         }
 
@@ -134,6 +173,12 @@ namespace MultiMonPresenter
         private void menuFileRefresh_Click(object sender, EventArgs e)
         {
             CheckFiles(sender, e);
+        }
+
+        private void bDoSlideshow_Click(object sender, EventArgs e)
+        {
+            if (slideshow != null)
+                slideshow.Run();
         }
     }
 }

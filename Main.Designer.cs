@@ -47,8 +47,10 @@
             statusStrip1 = new StatusStrip();
             statusLabel1 = new ToolStripStatusLabel();
             statusLabel2 = new ToolStripStatusLabel();
+            statusLabel3 = new ToolStripStatusLabel();
             saveSettingsDialog = new SaveFileDialog();
             loadSettingsDialog = new OpenFileDialog();
+            bDoSlideshow = new Button();
             menu.SuspendLayout();
             statusStrip1.SuspendLayout();
             SuspendLayout();
@@ -183,7 +185,7 @@
             // 
             // statusStrip1
             // 
-            statusStrip1.Items.AddRange(new ToolStripItem[] { statusLabel1, statusLabel2 });
+            statusStrip1.Items.AddRange(new ToolStripItem[] { statusLabel1, statusLabel2, statusLabel3 });
             statusStrip1.Location = new Point(0, 355);
             statusStrip1.Name = "statusStrip1";
             statusStrip1.Size = new Size(683, 22);
@@ -202,6 +204,12 @@
             statusLabel2.Size = new Size(37, 17);
             statusLabel2.Text = "0 files";
             // 
+            // statusLabel3
+            // 
+            statusLabel3.Name = "statusLabel3";
+            statusLabel3.Size = new Size(46, 17);
+            statusLabel3.Text = "0 Slides";
+            // 
             // saveSettingsDialog
             // 
             saveSettingsDialog.DefaultExt = "json";
@@ -216,11 +224,23 @@
             loadSettingsDialog.Filter = "JSON Files (*.json)|*.json";
             loadSettingsDialog.Title = "Load MultiMon Settings";
             // 
+            // bDoSlideshow
+            // 
+            bDoSlideshow.Enabled = false;
+            bDoSlideshow.Location = new Point(20, 95);
+            bDoSlideshow.Name = "bDoSlideshow";
+            bDoSlideshow.Size = new Size(651, 74);
+            bDoSlideshow.TabIndex = 6;
+            bDoSlideshow.Text = "&Do Slideshow";
+            bDoSlideshow.UseVisualStyleBackColor = true;
+            bDoSlideshow.Click += bDoSlideshow_Click;
+            // 
             // Main
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(683, 377);
+            Controls.Add(bDoSlideshow);
             Controls.Add(statusStrip1);
             Controls.Add(lFolderErrorMessage);
             Controls.Add(bFolderBrowse);
@@ -262,5 +282,7 @@
         private ToolStripMenuItem menuFileExit;
         private SaveFileDialog saveSettingsDialog;
         private OpenFileDialog loadSettingsDialog;
+        private ToolStripStatusLabel statusLabel3;
+        private Button bDoSlideshow;
     }
 }
