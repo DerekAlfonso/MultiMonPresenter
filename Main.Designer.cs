@@ -34,11 +34,23 @@
             selectFolderDialog = new OpenFileDialog();
             menu = new MenuStrip();
             menuFile = new ToolStripMenuItem();
+            menuFileRefresh = new ToolStripMenuItem();
+            menuFileSave = new ToolStripMenuItem();
+            menuFileLoad = new ToolStripMenuItem();
+            menuFileSplit1 = new ToolStripSeparator();
+            menuFileExit = new ToolStripMenuItem();
             menuMonitors = new ToolStripMenuItem();
             menuMonitorsDetect = new ToolStripMenuItem();
-            menuMonitorsEnabled = new ToolStripMenuItem();
             menuMonitorsToggleNumbers = new ToolStripMenuItem();
+            menuMonitorsEnabled = new ToolStripMenuItem();
+            lFolderErrorMessage = new Label();
+            statusStrip1 = new StatusStrip();
+            statusLabel1 = new ToolStripStatusLabel();
+            statusLabel2 = new ToolStripStatusLabel();
+            saveSettingsDialog = new SaveFileDialog();
+            loadSettingsDialog = new OpenFileDialog();
             menu.SuspendLayout();
+            statusStrip1.SuspendLayout();
             SuspendLayout();
             // 
             // lFolder
@@ -58,6 +70,7 @@
             baseFolder.Name = "baseFolder";
             baseFolder.Size = new Size(522, 23);
             baseFolder.TabIndex = 1;
+            baseFolder.TextChanged += CheckFolder;
             // 
             // bFolderBrowse
             // 
@@ -88,9 +101,45 @@
             // 
             // menuFile
             // 
+            menuFile.DropDownItems.AddRange(new ToolStripItem[] { menuFileRefresh, menuFileSave, menuFileLoad, menuFileSplit1, menuFileExit });
             menuFile.Name = "menuFile";
             menuFile.Size = new Size(37, 20);
             menuFile.Text = "&File";
+            // 
+            // menuFileRefresh
+            // 
+            menuFileRefresh.Name = "menuFileRefresh";
+            menuFileRefresh.Size = new Size(185, 22);
+            menuFileRefresh.Text = "&Refresh Folder";
+            menuFileRefresh.Click += menuFileRefresh_Click;
+            // 
+            // menuFileSave
+            // 
+            menuFileSave.Name = "menuFileSave";
+            menuFileSave.ShortcutKeys = Keys.Control | Keys.S;
+            menuFileSave.Size = new Size(185, 22);
+            menuFileSave.Text = "&Save Settings";
+            menuFileSave.Click += menuFileSave_Click;
+            // 
+            // menuFileLoad
+            // 
+            menuFileLoad.Name = "menuFileLoad";
+            menuFileLoad.ShortcutKeys = Keys.Control | Keys.L;
+            menuFileLoad.Size = new Size(185, 22);
+            menuFileLoad.Text = "&Load Settings";
+            menuFileLoad.Click += menuFileLoad_Click;
+            // 
+            // menuFileSplit1
+            // 
+            menuFileSplit1.Name = "menuFileSplit1";
+            menuFileSplit1.Size = new Size(182, 6);
+            // 
+            // menuFileExit
+            // 
+            menuFileExit.Name = "menuFileExit";
+            menuFileExit.Size = new Size(185, 22);
+            menuFileExit.Text = "E&xit";
+            menuFileExit.Click += menuFileExit_Click;
             // 
             // menuMonitors
             // 
@@ -106,6 +155,13 @@
             menuMonitorsDetect.Text = "&Detect Monitors";
             menuMonitorsDetect.Click += menuMonitorsDetect_Click;
             // 
+            // menuMonitorsToggleNumbers
+            // 
+            menuMonitorsToggleNumbers.Name = "menuMonitorsToggleNumbers";
+            menuMonitorsToggleNumbers.Size = new Size(201, 22);
+            menuMonitorsToggleNumbers.Text = "&Show Monitor Numbers";
+            menuMonitorsToggleNumbers.Click += menuMonitorsShowNumbers_Click;
+            // 
             // menuMonitorsEnabled
             // 
             menuMonitorsEnabled.Enabled = false;
@@ -113,18 +169,60 @@
             menuMonitorsEnabled.Size = new Size(201, 22);
             menuMonitorsEnabled.Text = "&Enabled";
             // 
-            // menuMonitorsToggleNumbers
+            // lFolderErrorMessage
             // 
-            menuMonitorsToggleNumbers.Name = "menuMonitorsToggleNumbers";
-            menuMonitorsToggleNumbers.Size = new Size(201, 22);
-            menuMonitorsToggleNumbers.Text = "&Show Monitor Numbers";
-            menuMonitorsToggleNumbers.Click += showMonitorNumbersToolStripMenuItem_Click;
+            lFolderErrorMessage.AutoSize = true;
+            lFolderErrorMessage.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lFolderErrorMessage.ForeColor = Color.Red;
+            lFolderErrorMessage.Location = new Point(69, 59);
+            lFolderErrorMessage.Name = "lFolderErrorMessage";
+            lFolderErrorMessage.Size = new Size(151, 15);
+            lFolderErrorMessage.TabIndex = 4;
+            lFolderErrorMessage.Text = "Error: Error Message Here";
+            lFolderErrorMessage.Visible = false;
+            // 
+            // statusStrip1
+            // 
+            statusStrip1.Items.AddRange(new ToolStripItem[] { statusLabel1, statusLabel2 });
+            statusStrip1.Location = new Point(0, 355);
+            statusStrip1.Name = "statusStrip1";
+            statusStrip1.Size = new Size(683, 22);
+            statusStrip1.TabIndex = 5;
+            statusStrip1.Text = "statusStrip1";
+            // 
+            // statusLabel1
+            // 
+            statusLabel1.Name = "statusLabel1";
+            statusLabel1.Size = new Size(42, 17);
+            statusLabel1.Text = "Ready.";
+            // 
+            // statusLabel2
+            // 
+            statusLabel2.Name = "statusLabel2";
+            statusLabel2.Size = new Size(37, 17);
+            statusLabel2.Text = "0 files";
+            // 
+            // saveSettingsDialog
+            // 
+            saveSettingsDialog.DefaultExt = "json";
+            saveSettingsDialog.FileName = "MultiMonSettings.json";
+            saveSettingsDialog.Filter = "JSON Files (*.json)|*.json";
+            saveSettingsDialog.Title = "Choose File to Save Settings";
+            // 
+            // loadSettingsDialog
+            // 
+            loadSettingsDialog.DefaultExt = "json";
+            loadSettingsDialog.FileName = "MultiMonSettings.json";
+            loadSettingsDialog.Filter = "JSON Files (*.json)|*.json";
+            loadSettingsDialog.Title = "Load MultiMon Settings";
             // 
             // Main
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(683, 377);
+            Controls.Add(statusStrip1);
+            Controls.Add(lFolderErrorMessage);
             Controls.Add(bFolderBrowse);
             Controls.Add(baseFolder);
             Controls.Add(lFolder);
@@ -135,6 +233,8 @@
             Load += Main_Load;
             menu.ResumeLayout(false);
             menu.PerformLayout();
+            statusStrip1.ResumeLayout(false);
+            statusStrip1.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -151,5 +251,16 @@
         private ToolStripMenuItem menuMonitorsDetect;
         private ToolStripMenuItem menuMonitorsEnabled;
         private ToolStripMenuItem menuMonitorsToggleNumbers;
+        private Label lFolderErrorMessage;
+        private StatusStrip statusStrip1;
+        private ToolStripStatusLabel statusLabel1;
+        private ToolStripStatusLabel statusLabel2;
+        private ToolStripMenuItem menuFileRefresh;
+        private ToolStripMenuItem menuFileSave;
+        private ToolStripMenuItem menuFileLoad;
+        private ToolStripSeparator menuFileSplit1;
+        private ToolStripMenuItem menuFileExit;
+        private SaveFileDialog saveSettingsDialog;
+        private OpenFileDialog loadSettingsDialog;
     }
 }
